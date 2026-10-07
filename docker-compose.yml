@@ -1,43 +1,84 @@
+version: '3.8'
+
 services:
   asterisk-gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: prolexa-asterisk-gateway:latest
-    container_name: prolexa-asterisk-gateway
-    restart: unless-stopped
+    image: ghcr.io/lucca-guidorizzi/prolexa-asterisk-gateway:latest
     environment:
-      # Domínio ou IP da sua VPS para NAT e SDP
       PUBLIC_IP: ${PUBLIC_IP:-69.62.97.253}
-      # Tronco GoSat
       TRUNK_HOST: ${TRUNK_HOST:-189.3.77.93}
       TRUNK_PORT: ${TRUNK_PORT:-5060}
       TRUNK_USER: ${TRUNK_USER}
       TRUNK_PASSWORD: ${TRUNK_PASSWORD}
-      # Ramal WebRTC para discagem no CRM
       WEBRTC_EXT_USER: ${WEBRTC_EXT_USER:-1001}
       WEBRTC_EXT_PASS: ${WEBRTC_EXT_PASS:-ProlexaSecret1001@}
     ports:
       # WSS para WebSockets WebRTC do Navegador
-      - "${WSS_PORT:-8089}:8089"
-      # SIP UDP/TCP para o Tronco da Operadora GoSat
-      - "5060:5060/udp"
-      - "5060:5060/tcp"
-      # Portas RTP para tráfego de voz bidirecional
-      - "10000-10100:10000-10100/udp"
+      - target: 8089
+        published: 8089
+        protocol: tcp
+        mode: host
+      # SIP UDP e TCP para a Operadora GoSat
+      - target: 5060
+        published: 5060
+        protocol: udp
+        mode: host
+      - target: 5060
+        published: 5060
+        protocol: tcp
+        mode: host
+      # Portas RTP para tráfego de voz direto (sem NAT do Swarm mesh)
+      - target: 10000
+        published: 10000
+        protocol: udp
+        mode: host
+      - target: 10001
+        published: 10001
+        protocol: udp
+        mode: host
+      - target: 10002
+        published: 10002
+        protocol: udp
+        mode: host
+      - target: 10003
+        published: 10003
+        protocol: udp
+        mode: host
+      - target: 10004
+        published: 10004
+        protocol: udp
+        mode: host
+      - target: 10005
+        published: 10005
+        protocol: udp
+        mode: host
+      - target: 10006
+        published: 10006
+        protocol: udp
+        mode: host
+      - target: 10007
+        published: 10007
+        protocol: udp
+        mode: host
+      - target: 10008
+        published: 10008
+        protocol: udp
+        mode: host
+      - target: 10009
+        published: 10009
+        protocol: udp
+        mode: host
+      - target: 10010
+        published: 10010
+        protocol: udp
+        mode: host
     volumes:
       - asterisk-recordings:/var/spool/asterisk/monitor
       - asterisk-logs:/var/log/asterisk
-    networks:
-      - asterisk-network
-
-networks:
-  asterisk-network:
-    name: asterisk-network
-    driver: bridge
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
 volumes:
   asterisk-recordings:
-    name: asterisk-recordings
   asterisk-logs:
-    name: asterisk-logs
