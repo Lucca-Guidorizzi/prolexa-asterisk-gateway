@@ -43,9 +43,9 @@ services:
       WEBRTC_EXT_USER: ${WEBRTC_EXT_USER:-1001}
       WEBRTC_EXT_PASS: ${WEBRTC_EXT_PASS:-ProlexaSecret1001@}
     ports:
-      # WSS para WebSockets WebRTC do Navegador
+      # WSS para WebSockets WebRTC do Navegador (Porta 8443 compatível com Proxy SSL Cloudflare)
       - target: 8089
-        published: 8089
+        published: 8443
         protocol: tcp
         mode: host
       # SIP UDP e TCP para a Operadora GoSat
@@ -141,7 +141,7 @@ Clique em **Deploy the stack**. O Swarm baixará a imagem oficial do GHCR e o co
 
 1. Abra o Prolexa CRM: [https://prolexa-adv-crm.vercel.app](https://prolexa-adv-crm.vercel.app)
 2. Vá em **Configurações** -> **PABX** -> aba **Conexão SIP**:
-   - **Servidor SIP WSS:** `wss://pabx.altimatics.com:8089/ws`
+   - **Servidor SIP WSS:** `wss://pabx.altimatics.com:8443/ws`
    - **Usuário SIP:** `1001`
    - **Senha SIP:** `ProlexaSecret1001@`
    - **Domínio SIP:** `pabx.altimatics.com`
