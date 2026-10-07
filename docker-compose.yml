@@ -11,10 +11,12 @@ services:
       TRUNK_PASSWORD: ${TRUNK_PASSWORD}
       WEBRTC_EXT_USER: ${WEBRTC_EXT_USER:-1001}
       WEBRTC_EXT_PASS: ${WEBRTC_EXT_PASS:-ProlexaSecret1001@}
+      CF_TOKEN: ${CF_TOKEN}
+      CF_ZONE_ID: ${CF_ZONE_ID:-1d3989b8d19877d632c6296341520265}
     ports:
-      # WSS para WebSockets WebRTC do Navegador (Porta 8443 compatível com Proxy SSL Cloudflare)
+      # WSS para WebSockets WebRTC do Navegador
       - target: 8089
-        published: 8443
+        published: 8089
         protocol: tcp
         mode: host
       # SIP UDP e TCP para a Operadora GoSat
@@ -74,6 +76,8 @@ services:
     volumes:
       - asterisk-recordings:/var/spool/asterisk/monitor
       - asterisk-logs:/var/log/asterisk
+      - asterisk-keys:/etc/asterisk/keys
+      - acme-data:/root/.acme.sh
     deploy:
       replicas: 1
       restart_policy:
@@ -82,3 +86,5 @@ services:
 volumes:
   asterisk-recordings:
   asterisk-logs:
+  asterisk-keys:
+  acme-data:

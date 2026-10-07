@@ -19,10 +19,26 @@ echo "[Asterisk] Inicializando PABX WebRTC Gateway..."
 echo "[Asterisk] IP Público configurado: ${PUBLIC_IP}"
 echo "[Asterisk] Tronco SIP da Operadora: ${TRUNK_USER}@${TRUNK_HOST}:${TRUNK_PORT}"
 
-# 2. Gerar certificado autoassinado para WSS caso não existam chaves montadas
+# 2. Gerenciamento de Certificado SSL para WSS (Let's Encrypt Oficial ou Autoassinado)
 mkdir -p /etc/asterisk/keys
+
+ACME_BIN="/root/.acme.sh/acme.sh"
+if [ -n "$CF_TOKEN" ] && [ -n "$CF_ZONE_ID" ] && [ -f "$ACME_BIN" ]; then
+    echo "[Asterisk] Solicitando / Renovando Certificado Oficial Let's Encrypt via Cloudflare DNS-01..."
+    export CF_Token="$CF_TOKEN"
+    export CF_Zone_ID="$CF_ZONE_ID"
+    "$ACME_BIN" --issue --dns dns_cf -d pabx.altimatics.com --server letsencrypt || true
+    if [ -d "/root/.acme.sh/pabx.altimatics.com_ecc" ]; then
+        echo "[Asterisk] Instalando certificado oficial Let's Encrypt em /etc/asterisk/keys/..."
+        "$ACME_BIN" --install-cert -d pabx.altimatics.com --ecc \
+            --cert-file /etc/asterisk/keys/asterisk.crt \
+            --key-file /etc/asterisk/keys/asterisk.key \
+            --fullchain-file /etc/asterisk/keys/asterisk.crt || true
+    fi
+fi
+
 if [ ! -f /etc/asterisk/keys/asterisk.crt ] || [ ! -f /etc/asterisk/keys/asterisk.key ]; then
-    echo "[Asterisk] Gerando certificado SSL autoassinado para WebSockets (WSS)..."
+    echo "[Asterisk] Certificado Let's Encrypt não disponível, gerando certificado SSL autoassinado..."
     openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
         -subj "/C=BR/ST=SP/L=SaoPaulo/O=Prolexa/CN=pabx.altimatics.com" \
         -addext "subjectAltName=DNS:pabx.altimatics.com,IP:${PUBLIC_IP}" \

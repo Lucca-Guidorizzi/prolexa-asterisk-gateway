@@ -1,6 +1,6 @@
 FROM alpine:3.20
 
-# Instalar Asterisk e módulos essenciais de WebRTC, SRTP e Codecs
+# Instalar Asterisk e módulos essenciais de WebRTC, SRTP, Codecs e acme.sh para SSL Let's Encrypt
 RUN apk add --no-cache \
     asterisk \
     asterisk-srtp \
@@ -10,7 +10,12 @@ RUN apk add --no-cache \
     openssl \
     ca-certificates \
     tzdata \
-    bash
+    bash \
+    curl \
+    socat
+
+# Instalar acme.sh para emissão e renovação automática de certificado Let's Encrypt oficial via Cloudflare DNS
+RUN curl https://get.acme.sh | sh -s email=suporte@altimatics.com
 
 # Definir Timezone Brasil
 ENV TZ=America/Sao_Paulo
