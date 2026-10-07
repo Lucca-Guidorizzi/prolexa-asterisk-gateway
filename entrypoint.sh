@@ -24,7 +24,8 @@ mkdir -p /etc/asterisk/keys
 if [ ! -f /etc/asterisk/keys/asterisk.crt ] || [ ! -f /etc/asterisk/keys/asterisk.key ]; then
     echo "[Asterisk] Gerando certificado SSL autoassinado para WebSockets (WSS)..."
     openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
-        -subj "/C=BR/ST=SP/L=SaoPaulo/O=Prolexa/CN=${PUBLIC_IP}" \
+        -subj "/C=BR/ST=SP/L=SaoPaulo/O=Prolexa/CN=pabx.altimatics.com" \
+        -addext "subjectAltName=DNS:pabx.altimatics.com,IP:${PUBLIC_IP}" \
         -keyout /etc/asterisk/keys/asterisk.key \
         -out /etc/asterisk/keys/asterisk.crt 2>/dev/null
     chmod 600 /etc/asterisk/keys/asterisk.key
