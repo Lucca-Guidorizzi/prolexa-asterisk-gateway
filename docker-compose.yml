@@ -1,0 +1,43 @@
+services:
+  asterisk-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: prolexa-asterisk-gateway:latest
+    container_name: prolexa-asterisk-gateway
+    restart: unless-stopped
+    environment:
+      # Domínio ou IP da sua VPS para NAT e SDP
+      PUBLIC_IP: ${PUBLIC_IP:-69.62.97.253}
+      # Tronco GoSat
+      TRUNK_HOST: ${TRUNK_HOST:-189.3.77.93}
+      TRUNK_PORT: ${TRUNK_PORT:-5060}
+      TRUNK_USER: ${TRUNK_USER}
+      TRUNK_PASSWORD: ${TRUNK_PASSWORD}
+      # Ramal WebRTC para discagem no CRM
+      WEBRTC_EXT_USER: ${WEBRTC_EXT_USER:-1001}
+      WEBRTC_EXT_PASS: ${WEBRTC_EXT_PASS:-ProlexaSecret1001@}
+    ports:
+      # WSS para WebSockets WebRTC do Navegador
+      - "${WSS_PORT:-8089}:8089"
+      # SIP UDP/TCP para o Tronco da Operadora GoSat
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+      # Portas RTP para tráfego de voz bidirecional
+      - "10000-10100:10000-10100/udp"
+    volumes:
+      - asterisk-recordings:/var/spool/asterisk/monitor
+      - asterisk-logs:/var/log/asterisk
+    networks:
+      - asterisk-network
+
+networks:
+  asterisk-network:
+    name: asterisk-network
+    driver: bridge
+
+volumes:
+  asterisk-recordings:
+    name: asterisk-recordings
+  asterisk-logs:
+    name: asterisk-logs
