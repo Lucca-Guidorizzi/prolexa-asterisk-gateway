@@ -30,16 +30,39 @@ if [ ! -f /etc/asterisk/keys/asterisk.crt ] || [ ! -f /etc/asterisk/keys/asteris
     chmod 600 /etc/asterisk/keys/asterisk.key
 fi
 
-# 3. Substituir variáveis nos templates de configuração PJSIP e Dialplan
-sed -i "s|\${PUBLIC_IP}|${PUBLIC_IP}|g" /etc/asterisk/pjsip.conf
-sed -i "s|\${TRUNK_HOST}|${TRUNK_HOST}|g" /etc/asterisk/pjsip.conf
-sed -i "s|\${TRUNK_PORT}|${TRUNK_PORT}|g" /etc/asterisk/pjsip.conf
-sed -i "s|\${TRUNK_USER}|${TRUNK_USER}|g" /etc/asterisk/pjsip.conf
-sed -i "s|\${TRUNK_PASSWORD}|${TRUNK_PASSWORD}|g" /etc/asterisk/pjsip.conf
-sed -i "s|\${WEBRTC_EXT_USER}|${WEBRTC_EXT_USER}|g" /etc/asterisk/pjsip.conf
-sed -i "s|\${WEBRTC_EXT_PASS}|${WEBRTC_EXT_PASS}|g" /etc/asterisk/pjsip.conf
-
-sed -i "s|\${TRUNK_USER}|${TRUNK_USER}|g" /etc/asterisk/extensions.conf
+python3 -c "
+import os
+for path in ['/etc/asterisk/pjsip.conf', '/etc/asterisk/extensions.conf']:
+    if os.path.exists(path):
+        with open(path, 'r') as f:
+            c = f.read()
+        for k in ['PUBLIC_IP', 'TRUNK_HOST', 'TRUNK_PORT', 'TRUNK_USER', 'TRUNK_PASSWORD', 'WEBRTC_EXT_USER', 'WEBRTC_EXT_PASS']:
+            val = os.environ.get(k, '')
+            c = c.replace('\${' + k + '}', val)
+        with open(path, 'w') as f:
+            f.write(c)
+" 2>/dev/null || node -e "
+const fs = require('fs');
+['/etc/asterisk/pjsip.conf', '/etc/asterisk/extensions.conf'].forEach(p => {
+    if (fs.existsSync(p)) {
+        let c = fs.readFileSync(p, 'utf8');
+        ['PUBLIC_IP', 'TRUNK_HOST', 'TRUNK_PORT', 'TRUNK_USER', 'TRUNK_PASSWORD', 'WEBRTC_EXT_USER', 'WEBRTC_EXT_PASS'].forEach(k => {
+            c = c.split('\${' + k + '}').join(process.env[k] || '');
+        });
+        fs.writeFileSync(p, c, 'utf8');
+    }
+});
+" 2>/dev/null || {
+    # Fallback caso python/node não estejam instalados: sed com delimitador seguro
+    sed -i "s|\${PUBLIC_IP}|${PUBLIC_IP}|g" /etc/asterisk/pjsip.conf
+    sed -i "s|\${TRUNK_HOST}|${TRUNK_HOST}|g" /etc/asterisk/pjsip.conf
+    sed -i "s|\${TRUNK_PORT}|${TRUNK_PORT}|g" /etc/asterisk/pjsip.conf
+    sed -i "s|\${TRUNK_USER}|${TRUNK_USER}|g" /etc/asterisk/pjsip.conf
+    sed -i "s|\${TRUNK_PASSWORD}|$(echo "$TRUNK_PASSWORD" | sed -e 's/[\/&]/\\&/g')|g" /etc/asterisk/pjsip.conf
+    sed -i "s|\${WEBRTC_EXT_USER}|${WEBRTC_EXT_USER}|g" /etc/asterisk/pjsip.conf
+    sed -i "s|\${WEBRTC_EXT_PASS}|$(echo "$WEBRTC_EXT_PASS" | sed -e 's/[\/&]/\\&/g')|g" /etc/asterisk/pjsip.conf
+    sed -i "s|\${TRUNK_USER}|${TRUNK_USER}|g" /etc/asterisk/extensions.conf
+}
 
 echo "[Asterisk] Configurações aplicadas com sucesso. Iniciando Asterisk..."
 
