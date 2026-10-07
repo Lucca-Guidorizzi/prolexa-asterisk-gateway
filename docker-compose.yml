@@ -12,9 +12,9 @@ services:
       WEBRTC_EXT_USER: ${WEBRTC_EXT_USER:-1001}
       WEBRTC_EXT_PASS: ${WEBRTC_EXT_PASS:-ProlexaSecret1001@}
     ports:
-      # WSS para WebSockets WebRTC do Navegador
+      # WSS para WebSockets WebRTC do Navegador (Porta 8443 compatível com Proxy SSL Cloudflare)
       - target: 8089
-        published: 8089
+        published: 8443
         protocol: tcp
         mode: host
       # SIP UDP e TCP para a Operadora GoSat
